@@ -1,0 +1,20 @@
+{
+    "type": "module",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "nodemon app.js"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.6.1",
+        "express": "^4.18.2",
+        "helmet": "^7.0.0",
+        "morgan": "^1.10.0",
+        "mysql2": "^3.6.0",
+        "sequelize": "^6.36.1",
+        "stripe": "^18.3.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.3"
+    }
+}

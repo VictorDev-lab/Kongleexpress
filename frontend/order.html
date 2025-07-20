@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order a Kongle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Order a One-Time Kongle</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="order.html">Order</a>
+            <a href="subscribe.html">Subscribe</a>
+            <a href="about.html">About</a>
+            <a href="success.html">Success</a>
+        </nav>
+    </header>
+    <main>
+        <form id="orderForm" aria-label="Order a pinecone form">
+            <input type="text" name="sender" placeholder="Your Name" required aria-required="true">
+            <input type="text" name="recipient" placeholder="Recipient Name" required aria-required="true">
+            <textarea name="address" placeholder="Recipient Address" required aria-required="true"></textarea>
+            <textarea name="message" placeholder="Funny Note" required aria-required="true"></textarea>
+            <button type="button" id="suggestQuote">Suggest a Quote</button>
+            <input type="text" name="quoteType" placeholder="Quote Style (funny/sad/sarcastic)" required aria-required="true">
+            <select name="pineconeType" required aria-required="true">
+                <option value="">Choose Pinecone Type</option>
+                <option value="dusty">Dusty ($10)</option>
+                <option value="classic">Classic ($20)</option>
+                <option value="deluxe">Deluxe ($30)</option>
+                <option value="ultra">Ultra Deluxe ($1000)</option>
+            </select>
+            <label><input type="checkbox" name="isSubscription"> Monthly Subscription</label>
+            <button type="submit" aria-label="Pay and send pinecone">Pay and Send Kongle</button>
+        </form>
+        <div id="feedback" aria-live="polite"></div>
+    </main>
+    <script>
+        const orderForm = document.getElementById('orderForm');
+        const feedback = document.getElementById('feedback');
+        const suggestQuoteBtn = document.getElementById('suggestQuote');
+        const messageInput = orderForm.querySelector('textarea[name="message"]');
+        const quoteTypeInput = orderForm.querySelector('input[name="quoteType"]');
+
+        // Random quote suggestions
+        const quotes = {
+            funny: ["Is your name Wi-Fi? Because I'm not feeling a connection.", "You're like a parking spot—sometimes you have to circle around to realize you're not wanted."],
+            sad: ["Even the pinecone feels heavier than my heart today.", "This pinecone will outlast our friendship."],
+            sarcastic: ["Wow, you must be so proud of yourself. Here's a pinecone.", "This pinecone has more personality than you do."]
+        };
+
+        suggestQuoteBtn.addEventListener('click', () => {
+            const quoteType = quoteTypeInput.value.toLowerCase();
+            if (quotes[quoteType]) {
+                const randomQuote = quotes[quoteType][Math.floor(Math.random() * quotes[quoteType].length)];
+                messageInput.value = randomQuote;
+                feedback.textContent = `Suggested a ${quoteType} quote!`;
+            } else {
+                feedback.textContent = 'Please enter a valid quote style (funny, sad, sarcastic).';
+            }
+        });
+
+        orderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            feedback.textContent = 'Processing your order...';
+
+            // Validate quoteType
+            const quoteType = quoteTypeInput.value.toLowerCase();
+            if (!['funny', 'sad', 'sarcastic'].includes(quoteType)) {
+                feedback.textContent = 'Error: Quote style must be funny, sad, or sarcastic.';
+                return;
+            }
+
+            const formData = new FormData(orderForm);
+            const data = Object.fromEntries(formData.entries());
+            data.isSubscription = formData.get('isSubscription') === 'on';
+
+            try {
+                // Step 1: Save order to DB
+                const saveRes = await fetch('http://localhost:3000/api/kongles', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                if (!saveRes.ok) {
+                    throw new Error('Failed to save order: ' + (await saveRes.text()));
+                }
+
+                // Step 2: Redirect to Stripe checkout
+                const checkoutRes = await fetch('http://localhost:3000/api/kongles/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pineconeType: data.pineconeType, subscription: data.isSubscription }),
+                });
+
+                const result = await checkoutRes.json();
+                if (checkoutRes.ok) {
+                    window.location.href = result.url;
+                } else {
+                    feedback.textContent = 'Stripe error: ' + (result.error || 'Unknown issue');
+                }
+            } catch (error) {
+                feedback.textContent = 'Error: ' + error.message;
+            }
+        });
+    </script>
+</body>
+</html>

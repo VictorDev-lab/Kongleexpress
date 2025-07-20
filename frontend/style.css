@@ -1,0 +1,146 @@
+/* style.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #fefdf9; /* Light cream */
+  color: #4e3e28; /* Earthy brown */
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+header {
+  background-color: #c9d8c5; /* Calm sage */
+  padding: 20px;
+  color: #2e2e2e;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-family: 'Comic Neue', cursive; /* Playful header font */
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+nav a {
+  color: #4e3e28; /* Earthy brown for contrast */
+  margin: 0 1rem;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s ease-in-out;
+}
+
+nav a:hover {
+  color: #ffa600; /* Playful orange */
+}
+
+main {
+  max-width: 600px;
+  margin: 30px auto;
+  padding: 0 20px;
+}
+
+form {
+  background: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+input, textarea, select {
+  width: 100%;
+  margin: 0.75rem 0;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #ffa600;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+button, .cta-button {
+  background-color: #4e3e28; /* Earthy brown */
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover, .cta-button:hover {
+  background-color: #6e5c3b; /* Lighter brown */
+  transform: scale(1.05);
+}
+
+#suggestQuote {
+  background-color: #ffa600; /* Playful orange for quote button */
+  color: black;
+}
+
+#suggestQuote:hover {
+  background-color: #ff8800;
+}
+
+#feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+  color: #4e3e28;
+  min-height: 1.5rem; /* Prevent layout shift */
+}
+
+footer {
+  margin-top: 4rem;
+  padding: 1rem;
+  font-size: 0.85rem;
+  color: #888;
+  background-color: #e0e0e0;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  h1 {
+      font-size: 2rem;
+  }
+  nav {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+  }
+  nav a {
+      margin: 0.5rem 0;
+  }
+  form {
+      padding: 15px;
+  }
+}
+
+/* Subtle pinecone background */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://source.unsplash.com/random/1920x1080?pinecone') no-repeat center center/cover;
+  opacity: 0.1;
+  z-index: -1;
+}
