@@ -12,3 +12,10 @@ const Kongle = db.define('Kongle', {
 });
 
 export default Kongle;
+
+const data = Object.fromEntries(new FormData(orderForm));
+const res = await fetch('http://localhost:3000/api/kongles', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data),
+});

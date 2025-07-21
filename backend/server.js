@@ -18,22 +18,13 @@ const PORT = process.env.PORT || 3000;
 // Initier modellen
 const Order = OrderModel(sequelize, Sequelize.DataTypes);
 
-// Stripe webhook trenger raw body (må komme før express.json)
+// Stripe webhook trenger raw body (må være FØR express.json)
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
   res.status(200).send('Webhook received');
 });
 
 // Middleware
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https://source.unsplash.com"],
-      // legg til andre kilder ved behov
-    },
-  })
-);
+app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json());
@@ -69,7 +60,7 @@ app.get('/api/kongles', async (req, res) => {
 // Lagre ny order
 app.post('/api/kongles', async (req, res) => {
   try {
-    console.log('Mottatt ordre:', req.body);  // logg for debugging
+    console.log('Mottatt ordre:', req.body);
     const newOrder = await Order.create(req.body);
     res.status(201).json(newOrder);
   } catch (err) {
@@ -79,9 +70,9 @@ app.post('/api/kongles', async (req, res) => {
 });
 
 // Dummy Stripe checkout URL
-app.post('/api/kongles/checkout', async (req, res) => {
+app.post('/api/kongles/checkout', (req, res) => {
   const { pineconeType, subscription } = req.body;
-  // Her kan du koble til Stripe API etterhvert
+  // Her kan Stripe-API integreres senere
   res.json({ url: 'https://stripe.com/checkout' });
 });
 
@@ -89,4 +80,5 @@ app.post('/api/kongles/checkout', async (req, res) => {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// Start server
 app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));

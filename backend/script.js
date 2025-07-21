@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
       orderForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = Object.fromEntries(new FormData(orderForm));
-        const res = await fetch('http://localhost:5000/api/kongles', {
+        const res = await fetch('http://localhost:3000/api/kongles', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),
@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
       subForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const data = Object.fromEntries(new FormData(subForm));
-        const res = await fetch('http://localhost:5000/api/kongles/subscribe', {
+        const res = await fetch('http://localhost:3000/api/kongles/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data),

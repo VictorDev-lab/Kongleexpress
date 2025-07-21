@@ -37,8 +37,8 @@ export const createCheckoutSession = async (req, res) => {
       pineconeType,
       product: selected.name + (subscription ? ' Subscription' : '')
     },
-    success_url: 'http://localhost:5500/success.html',
-    cancel_url: 'http://localhost:5500/cancel.html',
+    success_url: 'http://localhost:3300/success.html',
+    cancel_url: 'http://localhost:3300/cancel.html',
   });
 
   res.json({ url: session.url });

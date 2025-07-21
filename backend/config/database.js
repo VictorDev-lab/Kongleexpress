@@ -1,13 +1,14 @@
+// config/database.js
 import { Sequelize } from 'sequelize';
 import dotenv from 'dotenv';
 dotenv.config();
 
-let db;
+let sequelize;
 
 if (process.env.MYSQL_URL) {
   const url = new URL(process.env.MYSQL_URL);
-  db = new Sequelize(
-    url.pathname.substring(1), // DB name without leading slash
+  sequelize = new Sequelize(
+    url.pathname.substring(1), // DB-navn uten leading slash
     url.username,
     url.password,
     {
@@ -17,7 +18,7 @@ if (process.env.MYSQL_URL) {
     }
   );
 } else {
-  db = new Sequelize(
+  sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
     process.env.DB_PASS,
@@ -29,4 +30,5 @@ if (process.env.MYSQL_URL) {
   );
 }
 
-export default db;
+export default sequelize;
+export { Sequelize };

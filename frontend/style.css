@@ -1,0 +1,147 @@
+/* New style.css — Clean & Modern */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f4f9f9;
+  color: #2c3e50;
+  line-height: 1.6;
+  text-align: center;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url('https://source.unsplash.com/random/1920x1080?pinecone') no-repeat center center/cover;
+  opacity: 0.08;
+  z-index: -1;
+}
+
+/* HEADER */
+header {
+  background-color: #1abc9c;
+  color: white;
+  padding: 1.5rem 1rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+header h1 {
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+/* NAVIGATION */
+nav {
+  margin-top: 1rem;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  margin: 0 1rem;
+  font-weight: 600;
+  transition: opacity 0.3s ease;
+}
+
+nav a:hover {
+  opacity: 0.8;
+}
+
+/* MAIN CONTENT */
+main {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+form {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+}
+
+input, textarea, select {
+  width: 100%;
+  padding: 0.9rem;
+  margin: 0.75rem 0;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #1abc9c;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* BUTTONS */
+button, .cta-button {
+  background-color: #1abc9c;
+  color: white;
+  border: none;
+  padding: 0.9rem 1.5rem;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover, .cta-button:hover {
+  background-color: #16a085;
+  transform: translateY(-2px);
+}
+
+#feedback {
+  margin-top: 1rem;
+  font-weight: bold;
+  min-height: 1.5rem;
+  color: #2c3e50;
+}
+
+/* FOOTER */
+footer {
+  margin-top: 3rem;
+  padding: 1rem;
+  background-color: #ecf0f1;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  header h1 {
+    font-size: 2rem;
+  }
+
+  nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  form {
+    padding: 1.5rem;
+  }
+}
