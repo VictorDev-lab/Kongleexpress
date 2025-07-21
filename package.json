@@ -1,0 +1,30 @@
+{
+  "name": "kongle",
+  "version": "1.0.0",
+  "description": "Kongleexpress.com is a website where you can order a real norwegian pinecone",
+  "main": "index.js",
+  "scripts": {
+    "start:backend": "node backend/server.js",
+    "start:frontend": "npm --prefix frontend start",
+    "start": "concurrently --names \"BACKEND,FRONTEND\" --prefix name \"npm run start:backend\" \"npm run start:frontend\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VictorDev-lab/Kongleexpress.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/VictorDev-lab/Kongleexpress/issues"
+  },
+  "homepage": "https://github.com/VictorDev-lab/Kongleexpress#readme",
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0"
+  }
+}
