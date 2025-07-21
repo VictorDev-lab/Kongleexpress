@@ -1,0 +1,21 @@
+# Use a secure, pinned version of Node with Alpine
+FROM node:18.20.3-alpine
+
+# Create app directory
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install --production
+
+# Copy remaining app files
+COPY . .
+
+# Update Alpine packages to reduce vulnerability risk
+RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
+
+# Expose app port
+EXPOSE 3000
+
+# Start the server
+CMD ["node", "server.js"]

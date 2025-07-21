@@ -12,3 +12,10 @@ pnpm-debug.log*
 
 # system files
 .DS_Store
+# Optional
+dist/
+coverage/
+*.local
+*.log
+.idea/
+.vscode/

@@ -19,25 +19,28 @@
   </header>
   <main>
     <form id="orderForm" aria-label="Order a pinecone form">
-      <input type="text" name="sender" placeholder="Your Name" required aria-required="true" />
-      <input type="text" name="recipient" placeholder="Recipient Name" required aria-required="true" />
-      <textarea name="address" placeholder="Recipient Address" required aria-required="true"></textarea>
-      <textarea name="message" placeholder="Funny Note" required aria-required="true"></textarea>
-      <button type="button" id="suggestQuote">Suggest a Quote</button>
-      <input type="text" name="quoteType" placeholder="Quote Style (funny/sad/sarcastic)" required aria-required="true" />
-      <select name="pineconeType" id="pineconeType" required aria-required="true">
-        <option value="">Choose Pinecone Type</option>
-        <option value="dusty" data-price="10">Dusty ($10)</option>
-        <option value="classic" data-price="20">Classic ($20)</option>
-        <option value="deluxe" data-price="30">Deluxe ($30)</option>
-        <option value="ultra" data-price="1000">Ultra Deluxe ($1000)</option>
-      </select>
-      <label>
-        <input type="checkbox" name="isSubscription" />
-        Monthly Subscription
-      </label>
-      <button type="submit" aria-label="Pay and send pinecone">Pay and Send Kongle</button>
-    </form>
+  <input type="text" name="sender" placeholder="Your Name" required aria-required="true" />
+  <input type="text" name="recipient" placeholder="Recipient Name" required aria-required="true" />
+  <textarea name="address" placeholder="Recipient Address" required aria-required="true"></textarea>
+  <textarea name="message" placeholder="Funny Note" required aria-required="true"></textarea>
+  <button type="button" id="suggestQuote">Suggest a Quote</button>
+  <input type="text" name="quoteType" placeholder="Quote Style (funny/sad/sarcastic)" required aria-required="true" />
+  <select name="pineconeType" id="pineconeType" required aria-required="true">
+    <option value="">Choose Pinecone Type</option>
+    <option value="dusty" data-price="10">Dusty ($10)</option>
+    <option value="classic" data-price="20">Classic ($20)</option>
+    <option value="deluxe" data-price="30">Deluxe ($30)</option>
+    <option value="ultra" data-price="1000">Ultra Deluxe ($1000)</option>
+  </select>
+  <div class="form-group checkbox-group">
+    <label for="isSubscription">
+      <input type="checkbox" id="isSubscription" name="isSubscription" />
+      Make this a Monthly Subscription
+    </label>
+  </div>
+  <button type="submit" aria-label="Pay and send pinecone">Pay and Send Kongle</button>
+</form>
+
     <div id="feedback" aria-live="polite"></div>
   </main>
 
