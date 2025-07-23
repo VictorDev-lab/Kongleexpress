@@ -16,10 +16,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Fix for express-rate-limit & proxies
+app.set('trust proxy', true);
+
 // Initialize the model
 const Order = OrderModel(sequelize, Sequelize.DataTypes);
 
-// Stripe webhook needs raw body (must be BEFORE express.json())
+// Stripe webhook (bodyParser.raw MUST come BEFORE express.json)
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
   res.status(200).send('Webhook received');
 });
@@ -83,7 +86,7 @@ app.post('/api/kongles', async (req, res) => {
 // Dummy Stripe checkout URL endpoint
 app.post('/api/kongles/checkout', (req, res) => {
   const { pineconeType, subscription } = req.body;
-  // Integrate Stripe API here later
+  // TODO: Integrate Stripe API here later
   res.json({ url: 'https://stripe.com/checkout' });
 });
 
@@ -91,14 +94,19 @@ app.post('/api/kongles/checkout', (req, res) => {
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Optionally serve order.html manually
+// Serve order.html manually (optional)
 app.get('/order', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/order.html'));
 });
 
-// Fallback for unknown routes
+// 404 fallback - serve 404.html or fallback text if missing
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
+  const fallbackPage = path.join(__dirname, '../frontend/404.html');
+  res.status(404).sendFile(fallbackPage, err => {
+    if (err) {
+      res.status(404).send('404 - Siden finnes ikke');
+    }
+  });
 });
 
 // Start server
