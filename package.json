@@ -22,10 +22,24 @@
   },
   "homepage": "https://github.com/VictorDev-lab/Kongleexpress#readme",
   "devDependencies": {
-    "concurrently": "^8.0.1"
+    "concurrently": "^8.0.1",
+    "nodemon": "^3.0.3"
   },
   "dependencies": {
-    "dotenv": "^17.2.0",
-    "express-rate-limit": "^8.0.1"
-  }
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "helmet": "^7.0.0",
+    "morgan": "^1.10.0",
+    "mysql2": "^3.6.0",
+    "sequelize": "^6.36.1",
+    "stripe": "^18.3.0",
+    "express-rate-limit": "^6.7.0",
+    "body-parser": "^1.20.2",
+    "axios": "^1.4.0"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
 }
