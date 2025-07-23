@@ -16,18 +16,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initier modellen
+// Initialize the model
 const Order = OrderModel(sequelize, Sequelize.DataTypes);
 
-// Stripe webhook trenger raw body (må være FØR express.json)
+// Stripe webhook needs raw body (must be BEFORE express.json())
 app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
   res.status(200).send('Webhook received');
 });
 
 // Rate limiting middleware
 const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minutt
-  max: 100,            // maks 100 forespørsler per IP per minutt
+  windowMs: 60 * 1000, // 1 minute
+  max: 100,            // max 100 requests per IP per minute
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -40,7 +40,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// DB-tilkobling og sync
+// DB connection and sync
 (async () => {
   try {
     await sequelize.authenticate();
@@ -58,7 +58,7 @@ app.get('/api', (req, res) => {
   res.json({ message: 'Kongle API is running!' });
 });
 
-// Hent alle orders
+// Get all orders
 app.get('/api/kongles', async (req, res) => {
   try {
     const orders = await Order.findAll();
@@ -68,10 +68,10 @@ app.get('/api/kongles', async (req, res) => {
   }
 });
 
-// Lagre ny order
+// Create new order
 app.post('/api/kongles', async (req, res) => {
   try {
-    console.log('Mottatt ordre:', req.body);
+    console.log('Received order:', req.body);
     const newOrder = await Order.create(req.body);
     res.status(201).json(newOrder);
   } catch (err) {
@@ -80,26 +80,28 @@ app.post('/api/kongles', async (req, res) => {
   }
 });
 
-// Dummy Stripe checkout URL
+// Dummy Stripe checkout URL endpoint
 app.post('/api/kongles/checkout', (req, res) => {
   const { pineconeType, subscription } = req.body;
-  // Her kan du integrere Stripe API senere
+  // Integrate Stripe API here later
   res.json({ url: 'https://stripe.com/checkout' });
 });
 
-// Serve frontend statisk
+// Serve frontend statically
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Serve order.html manuelt (valgfritt)
+// Optionally serve order.html manually
 app.get('/order', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/order.html'));
 });
 
-// Fallback for ukjente ruter (valgfritt)
+// Fallback for unknown routes
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html')); // lag 404.html hvis ønskelig
+  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
 });
 
 // Start server
-app.listen(PORT, () => console.log(`🚀 Kongle backend + frontend running on http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Kongle backend + frontend running on http://localhost:${PORT}`)
+);

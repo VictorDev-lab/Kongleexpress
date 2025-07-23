@@ -1,13 +1,17 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Static frontend for Kongle project",
   "main": "script.js",
   "scripts": {
+    "start": "live-server ./ --port=5500",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
 }
