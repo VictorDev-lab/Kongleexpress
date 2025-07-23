@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
+import rateLimit from 'express-rate-limit';
 
 import sequelize, { Sequelize } from './config/database.js';
 import OrderModel from './models/order.js';
@@ -23,6 +24,15 @@ app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) =>
   res.status(200).send('Webhook received');
 });
 
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minutt
+  max: 100,            // maks 100 forespørsler per IP per minutt
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
 // Middleware
 app.use(helmet());
 app.use(cors());
@@ -30,7 +40,7 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// DB connection og sync
+// DB-tilkobling og sync
 (async () => {
   try {
     await sequelize.authenticate();
@@ -43,7 +53,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 
-// API health check
+// Health check API
 app.get('/api', (req, res) => {
   res.json({ message: 'Kongle API is running!' });
 });
@@ -73,22 +83,22 @@ app.post('/api/kongles', async (req, res) => {
 // Dummy Stripe checkout URL
 app.post('/api/kongles/checkout', (req, res) => {
   const { pineconeType, subscription } = req.body;
-  // Her kan Stripe-API integreres senere
+  // Her kan du integrere Stripe API senere
   res.json({ url: 'https://stripe.com/checkout' });
 });
 
-// Serve static frontend
+// Serve frontend statisk
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Serve order.html manually (optional)
+// Serve order.html manuelt (valgfritt)
 app.get('/order', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/order.html'));
 });
 
-// Fallback for unknown routes (optional)
+// Fallback for ukjente ruter (valgfritt)
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html')); // create this file if you want
+  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html')); // lag 404.html hvis ønskelig
 });
 
 // Start server

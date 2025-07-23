@@ -19,3 +19,4 @@ coverage/
 *.log
 .idea/
 .vscode/
+.env.local

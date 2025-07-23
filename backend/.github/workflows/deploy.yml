@@ -1,0 +1,38 @@
+name: Deploy Kongle
+
+on:
+  push:
+    branches:
+      - main # eller hvilken branch du bruker
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sjekk ut koden
+        uses: actions/checkout@v3
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: Installer dependencies
+        run: npm install
+
+      - name: Bygg prosjektet (om nødvendig)
+        run: npm run build # hvis du har build-script
+
+      - name: Deploy til server via SSH
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 22
+          script: |
+            cd /path/to/your/app
+            git pull origin main
+            npm install
+            pm2 restart kongle || pm2 start server.js --name kongle

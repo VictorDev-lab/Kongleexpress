@@ -1,0 +1,6 @@
+.env
+    .env.local  # Local environment variables
+# IDE configurations
+.idea/  # JetBrains IDEs
+.vscode/  # Visual Studio Code settings
+# Optional build and coverage directories
