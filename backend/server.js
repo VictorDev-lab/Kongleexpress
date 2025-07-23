@@ -43,8 +43,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 
-app.get('/', (req, res) => {
-  res.send('Kongle backend is running!');
+// API health check
+app.get('/api', (req, res) => {
+  res.json({ message: 'Kongle API is running!' });
 });
 
 // Hent alle orders
@@ -76,9 +77,19 @@ app.post('/api/kongles/checkout', (req, res) => {
   res.json({ url: 'https://stripe.com/checkout' });
 });
 
-// Serve frontend statisk
+// Serve static frontend
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// Serve order.html manually (optional)
+app.get('/order', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/order.html'));
+});
+
+// Fallback for unknown routes (optional)
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html')); // create this file if you want
+});
+
 // Start server
-app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Kongle backend + frontend running on http://localhost:${PORT}`));
