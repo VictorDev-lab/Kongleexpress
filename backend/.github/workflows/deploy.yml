@@ -2,12 +2,13 @@ name: Deploy Kongle
 
 on:
   push:
-    branches:
-      - main # eller hvilken branch du bruker
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: production
 
     steps:
       - name: Sjekk ut koden
@@ -18,11 +19,17 @@ jobs:
         with:
           node-version: "18"
 
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
+
       - name: Installer dependencies
-        run: npm install
+        run: npm ci
 
       - name: Bygg prosjektet (om nødvendig)
-        run: npm run build # hvis du har build-script
+        run: npm run build # Kommenter ut hvis ikke brukt
 
       - name: Deploy til server via SSH
         uses: appleboy/ssh-action@v0.1.6
@@ -34,5 +41,9 @@ jobs:
           script: |
             cd /path/to/your/app
             git pull origin main
-            npm install
-            pm2 restart kongle || pm2 start server.js --name kongle
+            npm ci --production
+            pm2 restart kongle --update-env || \
+            pm2 start server.js --name kongle \
+              --log-date-format "YYYY-MM-DD HH:mm" \
+              --output /var/log/kongle/out.log \
+              --error /var/log/kongle/error.log
