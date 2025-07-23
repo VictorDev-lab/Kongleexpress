@@ -4,3 +4,4 @@
 .idea/  # JetBrains IDEs
 .vscode/  # Visual Studio Code settings
 # Optional build and coverage directories
+node_modules
