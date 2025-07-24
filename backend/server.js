@@ -6,62 +6,119 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import bodyParser from 'body-parser';
+import { Sequelize, DataTypes } from 'sequelize';
 import rateLimit from 'express-rate-limit';
 
-import sequelize, { Sequelize } from './config/database.js';
-import OrderModel from './models/order.js';
-
+// Load env vars
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
-// Fix for express-rate-limit & proxies
-app.set('trust proxy', true);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Initialize the model
-const Order = OrderModel(sequelize, Sequelize.DataTypes);
+// Setup Sequelize connection
+let sequelize;
+if (process.env.MYSQL_URL) {
+  try {
+    const url = new URL(process.env.MYSQL_URL);
+    sequelize = new Sequelize(
+      url.pathname.slice(1),
+      url.username,
+      url.password,
+      {
+        host: url.hostname,
+        port: Number(url.port || 3306),
+        dialect: 'mysql',
+        logging: false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        },
+      }
+    );
+    console.log("✅ Using MYSQL_URL from env");
+  } catch (err) {
+    console.error("❌ Failed to parse MYSQL_URL:", err);
+    process.exit(1);
+  }
+} else {
+  sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 3306),
+      dialect: 'mysql',
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false,
+        },
+      },
+    }
+  );
+  console.log("✅ Using DB_NAME/USER/HOST env config");
+}
 
-// Stripe webhook (bodyParser.raw MUST come BEFORE express.json)
-app.post('/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => {
-  res.status(200).send('Webhook received');
+// Define model
+const Order = sequelize.define('Order', {
+  item: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  quantity: {
+    type: DataTypes.INTEGER,
+    defaultValue: 1,
+  },
 });
 
-// Rate limiting middleware
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 100,            // max 100 requests per IP per minute
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+// Trust proxy correctly
+app.set('trust proxy', 1);
 
-// Middleware
+// Apply security & logging middleware
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
+
+// Rate limiting with trustProxy: true to avoid ERR_ERL_PERMISSIVE_TRUST_PROXY
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: true,
+});
+app.use(limiter);
+
+// Body parsers
+app.use(bodyParser.raw({ type: 'application/json' })); // for Stripe webhook
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// DB connection and sync
-(async () => {
-  try {
-    await sequelize.authenticate();
-    await sequelize.sync();
-    console.log('✅ MySQL connection established & synced');
-  } catch (err) {
-    console.error('DB error:', err);
-  }
-})();
+// Stripe webhook placeholder
+app.post('/webhook', (req, res) => {
+  // TODO: implement Stripe webhook logic here
+  res.status(200).send('Webhook received');
+});
 
-// Routes
+// Serve static frontend files
+app.use(express.static(path.join(__dirname, 'frontend')));
 
-// Health check API
+// Serve frontend index.html on any non-API route (SPA support)
+app.get(/^(?!\/api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+});
+
+// API routes
 app.get('/api', (req, res) => {
   res.json({ message: 'Kongle API is running!' });
 });
 
-// Get all orders
 app.get('/api/kongles', async (req, res) => {
   try {
     const orders = await Order.findAll();
@@ -71,45 +128,43 @@ app.get('/api/kongles', async (req, res) => {
   }
 });
 
-// Create new order
 app.post('/api/kongles', async (req, res) => {
   try {
-    console.log('Received order:', req.body);
     const newOrder = await Order.create(req.body);
     res.status(201).json(newOrder);
   } catch (err) {
-    console.error('Order creation error:', err);
     res.status(400).json({ error: err.message });
   }
 });
 
-// Dummy Stripe checkout URL endpoint
+app.post('/api/kongles/subscribe', (req, res) => {
+  console.log('New subscriber:', req.body);
+  res.status(200).json({ message: 'Subscribed!' });
+});
+
 app.post('/api/kongles/checkout', (req, res) => {
-  const { pineconeType, subscription } = req.body;
-  // TODO: Integrate Stripe API here later
-  res.json({ url: 'https://stripe.com/checkout' });
+  res.json({ url: 'https://stripe.com/checkout' }); // Placeholder
 });
 
-// Serve frontend statically
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-app.use(express.static(path.join(__dirname, '../frontend')));
-
-// Serve order.html manually (optional)
-app.get('/order', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/order.html'));
+// 404 fallback (for unknown API routes)
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
-// 404 fallback - serve 404.html or fallback text if missing
-app.use((req, res) => {
-  const fallbackPage = path.join(__dirname, '../frontend/404.html');
-  res.status(404).sendFile(fallbackPage, err => {
-    if (err) {
-      res.status(404).send('404 - Siden finnes ikke');
-    }
-  });
-});
+// Start server & connect to DB
+(async () => {
+  try {
+    await sequelize.authenticate();
+    await sequelize.sync();
+    console.log('✅ MySQL connection established & synced');
 
-// Start server
-app.listen(PORT, () =>
-  console.log(`🚀 Kongle backend + frontend running on http://localhost:${PORT}`)
-);
+    app.listen(PORT, () => {
+      console.log(`🚀 Kongle backend + frontend running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ DB connection error:', error);
+    process.exit(1);
+  }
+})();
+
+export { app, PORT, sequelize, Order };
