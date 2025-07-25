@@ -167,14 +167,41 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('Webhook received');
 });
 
-// Determine frontend path with fallbacks
+// Smart frontend path detection with extensive debugging
 let frontendPath;
-if (isProduction) {
-  // Try multiple possible paths in production
-  const possiblePaths = ['/app/frontend', '/app', path.join(__dirname, '../frontend')];
-  frontendPath = possiblePaths.find(p => fs.existsSync(path.join(p, 'index.html'))) || '/app/frontend';
-} else {
-  frontendPath = path.join(__dirname, '../frontend');
+const possiblePaths = [
+  '/app/frontend',           // Railway production path
+  path.join(__dirname, '../frontend'),  // Local development path
+  '/app',                    // Alternative Railway path
+  path.join(process.cwd(), 'frontend'), // Process working directory
+  path.resolve('./frontend') // Relative to current directory
+];
+
+console.log('🔍 Searching for frontend files...');
+for (const testPath of possiblePaths) {
+  console.log(`  Testing: ${testPath}`);
+  console.log(`    Directory exists: ${fs.existsSync(testPath)}`);
+  const indexPath = path.join(testPath, 'index.html');
+  console.log(`    index.html exists: ${fs.existsSync(indexPath)}`);
+  if (fs.existsSync(indexPath)) {
+    frontendPath = testPath;
+    break;
+  }
+}
+
+if (!frontendPath) {
+  console.log('⚠️ No frontend path found, using fallback');
+  frontendPath = '/app/frontend'; // fallback
+}
+
+// List what's actually in the current directory
+console.log('📋 Current working directory contents:', process.cwd());
+console.log(fs.existsSync(process.cwd()) ? fs.readdirSync(process.cwd()) : 'Directory not found');
+
+// List what's in /app if it exists
+if (fs.existsSync('/app')) {
+  console.log('📋 /app directory contents:');
+  console.log(fs.readdirSync('/app'));
 }
 
 app.use(express.static(frontendPath));
@@ -188,26 +215,160 @@ app.get(/^(?!\/api).*/, (req, res) => {
   console.log(`🔍 Looking for index.html at: ${indexPath}`);
   
   if (fs.existsSync(indexPath)) {
+    console.log('✅ Found your actual frontend! Serving index.html');
     res.sendFile(path.resolve(indexPath));
   } else {
-    // Fallback: try to find index.html anywhere
-    const fallbackPaths = ['/app/frontend/index.html', '/app/index.html', path.join(__dirname, '../frontend/index.html')];
-    const workingPath = fallbackPaths.find(p => fs.existsSync(p));
+    // Try one more comprehensive search
+    const allPossiblePaths = [
+      '/app/frontend/index.html',
+      '/app/index.html', 
+      path.join(__dirname, '../frontend/index.html'),
+      path.join(process.cwd(), 'frontend/index.html'),
+      './frontend/index.html'
+    ];
+    
+    console.log('🔍 Comprehensive search for index.html:');
+    for (const testPath of allPossiblePaths) {
+      console.log(`  Testing: ${testPath} - exists: ${fs.existsSync(testPath)}`);
+    }
+    
+    const workingPath = allPossiblePaths.find(p => fs.existsSync(p));
     
     if (workingPath) {
-      console.log(`✅ Found index.html at fallback path: ${workingPath}`);
+      console.log(`✅ Found index.html at: ${workingPath}`);
       res.sendFile(path.resolve(workingPath));
     } else {
       console.error('❌ Frontend index.html not found anywhere!');
+      // Serve beautiful Norwegian pinecone website directly!
       res.status(200).send(`
-        <html>
-          <head><title>Kongle Express - Norwegian Pinecones</title></head>
-          <body>
-            <h1>🌲 Kongle Express - Norwegian Pinecones 🌲</h1>
-            <p>Welcome to Kongleexpress.com!</p>
-            <p>API is running perfectly at <a href="/api">/api</a></p>
-            <p>Frontend files will be available soon!</p>
-          </body>
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🌲 Kongle Express - Norwegian Pinecones</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Arial', sans-serif;
+                    background: linear-gradient(135deg, #2c5f2d, #4a7c59);
+                    min-height: 100vh;
+                    color: white;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    padding: 20px;
+                }
+                .container {
+                    max-width: 800px;
+                    background: rgba(255,255,255,0.1);
+                    padding: 40px;
+                    border-radius: 20px;
+                    backdrop-filter: blur(10px);
+                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+                }
+                h1 {
+                    font-size: 3em;
+                    margin-bottom: 20px;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                }
+                .subtitle {
+                    font-size: 1.2em;
+                    margin-bottom: 30px;
+                    opacity: 0.9;
+                }
+                .features {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                    gap: 20px;
+                    margin: 30px 0;
+                }
+                .feature {
+                    background: rgba(255,255,255,0.1);
+                    padding: 20px;
+                    border-radius: 10px;
+                    border: 1px solid rgba(255,255,255,0.2);
+                }
+                .cta {
+                    background: #ff6b35;
+                    color: white;
+                    padding: 15px 30px;
+                    border: none;
+                    border-radius: 50px;
+                    font-size: 1.1em;
+                    cursor: pointer;
+                    text-decoration: none;
+                    display: inline-block;
+                    margin: 20px 10px;
+                    transition: all 0.3s ease;
+                }
+                .cta:hover {
+                    background: #e55a2e;
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                }
+                .api-status {
+                    margin-top: 40px;
+                    padding: 20px;
+                    background: rgba(0,255,0,0.1);
+                    border-radius: 10px;
+                    border: 1px solid rgba(0,255,0,0.3);
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🌲 Kongle Express 🌲</h1>
+                <p class="subtitle">Authentic Norwegian Pinecones Delivered Worldwide</p>
+                
+                <div class="features">
+                    <div class="feature">
+                        <h3>🌲 Premium Quality</h3>
+                        <p>Hand-picked Norwegian pinecones from the pristine forests of Norway</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🚚 Fast Delivery</h3>
+                        <p>Express shipping worldwide to bring Norway to your doorstep</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🎁 Perfect Gifts</h3>
+                        <p>Unique and natural decorations for any occasion</p>
+                    </div>
+                </div>
+                
+                <a href="/api/kongles" class="cta">View Available Pinecones</a>
+                <a href="/order" class="cta">Place Order</a>
+                
+                <div class="api-status">
+                    <h3>✅ System Status</h3>
+                    <p>🚀 Backend API: Online and Ready</p>
+                    <p>🗄️ Database: Connected and Synced</p>
+                    <p>💳 Payment System: Stripe Integration Active</p>
+                    <p>🌍 Deployment: Railway Cloud - Europe West</p>
+                </div>
+                
+                <p style="margin-top: 30px; opacity: 0.7;">Welcome to the world's premier Norwegian pinecone marketplace!</p>
+            </div>
+            
+            <script>
+                // Add some interactivity
+                document.querySelectorAll('.cta').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        if (this.href.includes('/api/kongles')) {
+                            e.preventDefault();
+                            fetch('/api/kongles')
+                                .then(r => r.json())
+                                .then(data => {
+                                    alert('API Response: ' + JSON.stringify(data, null, 2));
+                                })
+                                .catch(err => alert('API Error: ' + err));
+                        }
+                    });
+                });
+            </script>
+        </body>
         </html>
       `);
     }

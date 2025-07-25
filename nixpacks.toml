@@ -1,0 +1,15 @@
+[phases.setup]
+nixPkgs = ['nodejs-18_x', 'npm-9_x']
+
+[phases.install]
+cmds = ['npm ci']
+
+[phases.build]
+cmds = [
+  'echo "Frontend files before build:"',
+  'ls -la frontend/',
+  'echo "Building application..."'
+]
+
+[start]
+cmd = 'npm run start'
