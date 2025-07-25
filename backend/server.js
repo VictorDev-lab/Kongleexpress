@@ -167,10 +167,21 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('Webhook received');
 });
 
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Serve static files from frontend directory
+const frontendPath = isProduction ? '/app/frontend' : path.join(__dirname, '../frontend');
+app.use(express.static(frontendPath));
+console.log(`📁 Serving static files from: ${frontendPath}`);
 
+// Handle SPA routing - serve index.html for all non-API routes
 app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+  const indexPath = path.join(frontendPath, 'index.html');
+  console.log(`🔍 Looking for index.html at: ${indexPath}`);
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    console.error('❌ Frontend index.html not found at:', indexPath);
+    res.status(404).send('Frontend not found. Please check the build.');
+  }
 });
 
 app.get('/api', (req, res) => {
