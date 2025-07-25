@@ -167,153 +167,45 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('Webhook received');
 });
 
-// Determine frontend path - simple and clean
-const frontendPath = isProduction 
-  ? __dirname  // In production, files are copied to backend directory
-  : path.join(__dirname, '../frontend');
+// Determine frontend path with better detection
+let frontendPath;
+if (isProduction) {
+  // In production, files are copied to backend directory
+  frontendPath = __dirname;
+} else {
+  // In development, serve from frontend directory
+  frontendPath = path.join(__dirname, '../frontend');
+}
 
 console.log(`📁 Serving static files from: ${frontendPath}`);
+console.log(`🔍 Frontend path exists: ${fs.existsSync(frontendPath)}`);
+if (fs.existsSync(frontendPath)) {
+  const files = fs.readdirSync(frontendPath).filter(f => f.endsWith('.html'));
+  console.log(`📁 HTML files found: ${files.join(', ')}`);
+}
+
 app.use(express.static(frontendPath));
 
 // Serve your actual website pages
 app.get('/', (req, res) => {
   const indexPath = path.join(frontendPath, 'index.html');
+  console.log(`🔍 Looking for index.html at: ${indexPath}`);
+  
   if (fs.existsSync(indexPath)) {
+    console.log('✅ Found your frontend! Serving index.html');
     res.sendFile(path.resolve(indexPath));
   } else {
-      console.error('❌ Frontend index.html not found anywhere!');
-      // Serve beautiful Norwegian pinecone website directly!
-      res.status(200).send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>🌲 Kongle Express - Norwegian Pinecones</title>
-            <style>
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Arial', sans-serif;
-                    background: linear-gradient(135deg, #2c5f2d, #4a7c59);
-                    min-height: 100vh;
-                    color: white;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    text-align: center;
-                    padding: 20px;
-                }
-                .container {
-                    max-width: 800px;
-                    background: rgba(255,255,255,0.1);
-                    padding: 40px;
-                    border-radius: 20px;
-                    backdrop-filter: blur(10px);
-                    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-                }
-                h1 {
-                    font-size: 3em;
-                    margin-bottom: 20px;
-                    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-                }
-                .subtitle {
-                    font-size: 1.2em;
-                    margin-bottom: 30px;
-                    opacity: 0.9;
-                }
-                .features {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                    gap: 20px;
-                    margin: 30px 0;
-                }
-                .feature {
-                    background: rgba(255,255,255,0.1);
-                    padding: 20px;
-                    border-radius: 10px;
-                    border: 1px solid rgba(255,255,255,0.2);
-                }
-                .cta {
-                    background: #ff6b35;
-                    color: white;
-                    padding: 15px 30px;
-                    border: none;
-                    border-radius: 50px;
-                    font-size: 1.1em;
-                    cursor: pointer;
-                    text-decoration: none;
-                    display: inline-block;
-                    margin: 20px 10px;
-                    transition: all 0.3s ease;
-                }
-                .cta:hover {
-                    background: #e55a2e;
-                    transform: translateY(-2px);
-                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                }
-                .api-status {
-                    margin-top: 40px;
-                    padding: 20px;
-                    background: rgba(0,255,0,0.1);
-                    border-radius: 10px;
-                    border: 1px solid rgba(0,255,0,0.3);
-                }
-            </style>
-        </head>
-        <body>
-            <div class="container">
-                <h1>🌲 Kongle Express 🌲</h1>
-                <p class="subtitle">Authentic Norwegian Pinecones Delivered Worldwide</p>
-                
-                <div class="features">
-                    <div class="feature">
-                        <h3>🌲 Premium Quality</h3>
-                        <p>Hand-picked Norwegian pinecones from the pristine forests of Norway</p>
-                    </div>
-                    <div class="feature">
-                        <h3>🚚 Fast Delivery</h3>
-                        <p>Express shipping worldwide to bring Norway to your doorstep</p>
-                    </div>
-                    <div class="feature">
-                        <h3>🎁 Perfect Gifts</h3>
-                        <p>Unique and natural decorations for any occasion</p>
-                    </div>
-                </div>
-                
-                <a href="/api/kongles" class="cta">View Available Pinecones</a>
-                <a href="/order" class="cta">Place Order</a>
-                
-                <div class="api-status">
-                    <h3>✅ System Status</h3>
-                    <p>🚀 Backend API: Online and Ready</p>
-                    <p>🗄️ Database: Connected and Synced</p>
-                    <p>💳 Payment System: Stripe Integration Active</p>
-                    <p>🌍 Deployment: Railway Cloud - Europe West</p>
-                </div>
-                
-                <p style="margin-top: 30px; opacity: 0.7;">Welcome to the world's premier Norwegian pinecone marketplace!</p>
-            </div>
-            
-            <script>
-                // Add some interactivity
-                document.querySelectorAll('.cta').forEach(button => {
-                    button.addEventListener('click', function(e) {
-                        if (this.href.includes('/api/kongles')) {
-                            e.preventDefault();
-                            fetch('/api/kongles')
-                                .then(r => r.json())
-                                .then(data => {
-                                    alert('API Response: ' + JSON.stringify(data, null, 2));
-                                })
-                                .catch(err => alert('API Error: ' + err));
-                        }
-                    });
-                });
-            </script>
-        </body>
-        </html>
-      `);
+    console.log('⚠️ Frontend not found, serving maintenance page');
+    const maintenancePath = path.join(__dirname, 'templates', 'maintenance.html');
+    if (fs.existsSync(maintenancePath)) {
+      res.status(503).sendFile(path.resolve(maintenancePath));
+    } else {
+      res.status(503).json({
+        error: 'Website temporarily unavailable',
+        message: 'Frontend files not found. Please check deployment.',
+        status: 'maintenance',
+        timestamp: new Date().toISOString()
+      });
     }
   }
 });
