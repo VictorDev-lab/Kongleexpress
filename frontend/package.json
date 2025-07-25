@@ -2,10 +2,10 @@
   "name": "frontend",
   "version": "1.0.0",
   "scripts": {
-    "start": "live-server ./ --port=5500",
+    "dev": "vite",
     "build": "echo 'No frontend build step needed'"
   },
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "vite": "^7.0.6"
   }
 }
