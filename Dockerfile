@@ -10,12 +10,18 @@ RUN npm install
 COPY backend/package*.json ./backend/
 RUN npm install --prefix backend
 
-# Copy frontend package.json and install frontend dependencies
+# Copy frontend package.json and install frontend dependencies if it exists
 COPY frontend/package*.json ./frontend/
 RUN npm install --prefix frontend
 
-# Copy all source code
-COPY . .
+# Copy backend source code
+COPY backend/ ./backend/
+
+# Copy frontend source code
+COPY frontend/ ./frontend/
+
+# Copy root files
+COPY package.json package-lock.json ./
 
 # Expose the port
 EXPOSE $PORT

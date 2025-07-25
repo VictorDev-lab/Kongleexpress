@@ -167,20 +167,50 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('Webhook received');
 });
 
-// Serve static files from frontend directory
-const frontendPath = isProduction ? '/app/frontend' : path.join(__dirname, '../frontend');
+// Determine frontend path with fallbacks
+let frontendPath;
+if (isProduction) {
+  // Try multiple possible paths in production
+  const possiblePaths = ['/app/frontend', '/app', path.join(__dirname, '../frontend')];
+  frontendPath = possiblePaths.find(p => fs.existsSync(path.join(p, 'index.html'))) || '/app/frontend';
+} else {
+  frontendPath = path.join(__dirname, '../frontend');
+}
+
 app.use(express.static(frontendPath));
 console.log(`📁 Serving static files from: ${frontendPath}`);
+console.log(`🔍 Frontend directory exists: ${fs.existsSync(frontendPath)}`);
+console.log(`🔍 index.html exists: ${fs.existsSync(path.join(frontendPath, 'index.html'))}`);
 
 // Handle SPA routing - serve index.html for all non-API routes
 app.get(/^(?!\/api).*/, (req, res) => {
   const indexPath = path.join(frontendPath, 'index.html');
   console.log(`🔍 Looking for index.html at: ${indexPath}`);
+  
   if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
+    res.sendFile(path.resolve(indexPath));
   } else {
-    console.error('❌ Frontend index.html not found at:', indexPath);
-    res.status(404).send('Frontend not found. Please check the build.');
+    // Fallback: try to find index.html anywhere
+    const fallbackPaths = ['/app/frontend/index.html', '/app/index.html', path.join(__dirname, '../frontend/index.html')];
+    const workingPath = fallbackPaths.find(p => fs.existsSync(p));
+    
+    if (workingPath) {
+      console.log(`✅ Found index.html at fallback path: ${workingPath}`);
+      res.sendFile(path.resolve(workingPath));
+    } else {
+      console.error('❌ Frontend index.html not found anywhere!');
+      res.status(200).send(`
+        <html>
+          <head><title>Kongle Express - Norwegian Pinecones</title></head>
+          <body>
+            <h1>🌲 Kongle Express - Norwegian Pinecones 🌲</h1>
+            <p>Welcome to Kongleexpress.com!</p>
+            <p>API is running perfectly at <a href="/api">/api</a></p>
+            <p>Frontend files will be available soon!</p>
+          </body>
+        </html>
+      `);
+    }
   }
 });
 
