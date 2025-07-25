@@ -1,22 +1,36 @@
 {
-  "name": "kongle-dev",
+  "name": "kongle-express",
   "version": "1.0.0",
+  "description": "Norwegian Pinecone E-commerce Platform",
   "private": true,
   "main": "backend/server.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
-    "frontend": "npm start --prefix frontend",
-    "backend": "npm run dev --prefix backend",
-    "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "build": "echo 'Build completed - frontend and backend ready'",
     "start": "node backend/server.js",
-    "postinstall": "npm install --prefix backend && npm install --prefix frontend"
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "backend:dev": "npm run dev --prefix backend",
+    "backend:start": "npm run start --prefix backend",
+    "frontend:dev": "npm start --prefix frontend",
+    "build": "npm run frontend:build && echo 'Build complete - full-stack Kongle Express ready!'",
+    "frontend:build": "echo 'Copying frontend files...' && cp -r frontend/* backend/ 2>/dev/null || true",
+    "postinstall": "npm install --prefix backend && npm install --prefix frontend && npm run frontend:build",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules"
   },
   "devDependencies": {
     "concurrently": "^7.6.0"
   },
-  "files": [
-    "backend/**/*",
-    "frontend/**/*",
-    "package.json"
-  ]
+  "keywords": [
+    "pinecones",
+    "norway",
+    "e-commerce",
+    "express",
+    "mysql",
+    "stripe"
+  ],
+  "author": "VictorDev",
+  "license": "MIT"
 }

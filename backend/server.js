@@ -167,77 +167,20 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('Webhook received');
 });
 
-// Smart frontend path detection with extensive debugging
-let frontendPath;
-const possiblePaths = [
-  '/app/frontend',           // Railway production path
-  '/app',                    // Root directory (where nixpacks copies files)
-  path.join(__dirname, '../frontend'),  // Local development path
-  path.join(process.cwd(), 'frontend'), // Process working directory
-  path.resolve('./frontend') // Relative to current directory
-];
+// Determine frontend path - simple and clean
+const frontendPath = isProduction 
+  ? __dirname  // In production, files are copied to backend directory
+  : path.join(__dirname, '../frontend');
 
-console.log('🔍 Searching for frontend files...');
-for (const testPath of possiblePaths) {
-  console.log(`  Testing: ${testPath}`);
-  console.log(`    Directory exists: ${fs.existsSync(testPath)}`);
-  const indexPath = path.join(testPath, 'index.html');
-  console.log(`    index.html exists: ${fs.existsSync(indexPath)}`);
-  if (fs.existsSync(indexPath)) {
-    frontendPath = testPath;
-    break;
-  }
-}
-
-if (!frontendPath) {
-  console.log('⚠️ No frontend path found, using fallback');
-  frontendPath = '/app/frontend'; // fallback
-}
-
-// List what's actually in the current directory
-console.log('📋 Current working directory contents:', process.cwd());
-console.log(fs.existsSync(process.cwd()) ? fs.readdirSync(process.cwd()) : 'Directory not found');
-
-// List what's in /app if it exists
-if (fs.existsSync('/app')) {
-  console.log('📋 /app directory contents:');
-  console.log(fs.readdirSync('/app'));
-}
-
-app.use(express.static(frontendPath));
 console.log(`📁 Serving static files from: ${frontendPath}`);
-console.log(`🔍 Frontend directory exists: ${fs.existsSync(frontendPath)}`);
-console.log(`🔍 index.html exists: ${fs.existsSync(path.join(frontendPath, 'index.html'))}`);
+app.use(express.static(frontendPath));
 
-// Handle SPA routing - serve index.html for all non-API routes
-app.get(/^(?!\/api).*/, (req, res) => {
+// Serve your actual website pages
+app.get('/', (req, res) => {
   const indexPath = path.join(frontendPath, 'index.html');
-  console.log(`🔍 Looking for index.html at: ${indexPath}`);
-  
   if (fs.existsSync(indexPath)) {
-    console.log('✅ Found your actual frontend! Serving index.html');
     res.sendFile(path.resolve(indexPath));
   } else {
-    // Try one more comprehensive search
-    const allPossiblePaths = [
-      '/app/frontend/index.html',
-      '/app/index.html', 
-      path.join(__dirname, '../frontend/index.html'),
-      path.join(process.cwd(), 'frontend/index.html'),
-      './frontend/index.html'
-    ];
-    
-    console.log('🔍 Comprehensive search for index.html:');
-    for (const testPath of allPossiblePaths) {
-      console.log(`  Testing: ${testPath} - exists: ${fs.existsSync(testPath)}`);
-    }
-    
-    const workingPath = allPossiblePaths.find(p => fs.existsSync(p));
-    
-    if (workingPath) {
-      console.log(`✅ Found index.html at: ${workingPath}`);
-      res.sendFile(path.resolve(workingPath));
-    } else {
       console.error('❌ Frontend index.html not found anywhere!');
       // Serve beautiful Norwegian pinecone website directly!
       res.status(200).send(`

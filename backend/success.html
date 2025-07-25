@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success 🎉</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Success! 🎉</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="order.html">Order</a>
+            <a href="subscribe.html">Subscribe</a>
+            <a href="about.html">About</a>
+        </nav>
+    </header>
+    <main>
+        <div id="successMessage" aria-live="polite">
+            <h2>Thanks for your purchase/subscription!</h2>
+            <p>Your pinecone will be on its way shortly — emotionally and physically 🌲💨</p>
+            <p id="subscriptionInfo"></p>
+            <p><a href="index.html">← Back to homepage</a></p>
+        </div>
+    </main>
+    <footer>
+        © 2025 Kongle Inc. You paid for a pinecone. That’s wild.
+    </footer>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+
+        const successMessage = document.getElementById('successMessage');
+        const subscriptionInfo = document.getElementById('subscriptionInfo');
+
+        async function verifyPayment() {
+            if (!sessionId) {
+                successMessage.innerHTML = '<h2>Error</h2><p>No session ID provided. Did you complete the payment?</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/kongles/verify?session_id=${sessionId}`);
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    subscriptionInfo.textContent = result.isSubscription
+                        ? 'Get ready for monthly passive-aggressive nature deliveries!'
+                        : `Your ${result.pineconeType} pinecone is on its way!`;
+                } else {
+                    successMessage.innerHTML = '<h2>Error</h2><p>Payment verification failed: ' + (result.error || 'Unknown issue') + '</p>';
+                }
+            } catch (error) {
+                successMessage.innerHTML = '<h2>Error</h2><p>Network error: ' + error.message + '</p>';
+            }
+        }
+
+        verifyPayment();
+    </script>
+</body>
+</html>
