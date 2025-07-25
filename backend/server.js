@@ -85,9 +85,13 @@ if (process.env.MYSQL_URL) {
       }
     );
 
-    // Listen to connection error event
-    sequelize.connectionManager.on('error', err => {
-      console.error('Sequelize connection error:', err);
+    // Add connection event handlers
+    sequelize.addHook('afterConnect', (connection, config) => {
+      console.log('✅ Database connection established');
+    });
+    
+    sequelize.addHook('beforeDisconnect', (connection) => {
+      console.log('⚠️ Database connection closing');
     });
 
     console.log(`✅ Using MYSQL_URL (${isLocal ? 'LOCAL' : 'PRODUCTION'})`);
