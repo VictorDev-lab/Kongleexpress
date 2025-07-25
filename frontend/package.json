@@ -2,7 +2,8 @@
   "name": "frontend",
   "version": "1.0.0",
   "scripts": {
-    "start": "live-server ./ --port=5500"
+    "start": "live-server ./ --port=5500",
+    "build": "echo 'No frontend build step needed'"
   },
   "devDependencies": {
     "live-server": "^1.2.2"
