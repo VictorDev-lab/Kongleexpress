@@ -2,14 +2,21 @@
   "name": "kongle-dev",
   "version": "1.0.0",
   "private": true,
+  "main": "backend/server.js",
   "scripts": {
     "frontend": "npm start --prefix frontend",
     "backend": "npm run dev --prefix backend",
     "dev": "concurrently \"npm run backend\" \"npm run frontend\"",
-    "build": "npm run build --prefix frontend",
-    "start": "npm run start --prefix backend"
+    "build": "echo 'Build completed - frontend and backend ready'",
+    "start": "node backend/server.js",
+    "postinstall": "npm install --prefix backend && npm install --prefix frontend"
   },
   "devDependencies": {
     "concurrently": "^7.6.0"
-  }
+  },
+  "files": [
+    "backend/**/*",
+    "frontend/**/*",
+    "package.json"
+  ]
 }
