@@ -9,7 +9,4 @@ COPY . .
 
 EXPOSE 3000
 
-# Skip frontend build since it has none
-# RUN npm run build --prefix frontend
-
 CMD ["npm", "run", "dev", "--prefix", "backend"]
