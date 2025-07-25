@@ -106,12 +106,12 @@ app.post('/webhook', (req, res) => {
   res.status(200).send('Webhook received');
 });
 
-// Serve static frontend files
-app.use(express.static(path.join(__dirname, 'frontend')));
+// Serve static frontend files (FIXED PATH)
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Serve frontend index.html on any non-API route (SPA support)
+// Serve frontend index.html on any non-API route (SPA support) - FIXED PATH
 app.get(/^(?!\/api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend', 'index.html'));
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
 // API routes
