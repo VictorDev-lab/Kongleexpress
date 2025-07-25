@@ -2,12 +2,18 @@
 nixPkgs = ['nodejs-18_x', 'npm-9_x']
 
 [phases.install]
-cmds = ['npm ci']
+cmds = [
+  'npm ci',
+  'ls -la',
+  'echo "Copying frontend files..."',
+  'cp -r frontend/* .',
+  'ls -la'
+]
 
 [phases.build]
 cmds = [
-  'echo "Frontend files before build:"',
-  'ls -la frontend/',
+  'echo "Frontend files in root:"',
+  'ls -la *.html',
   'echo "Building application..."'
 ]
 

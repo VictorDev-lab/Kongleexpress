@@ -171,8 +171,8 @@ app.post('/webhook', (req, res) => {
 let frontendPath;
 const possiblePaths = [
   '/app/frontend',           // Railway production path
+  '/app',                    // Root directory (where nixpacks copies files)
   path.join(__dirname, '../frontend'),  // Local development path
-  '/app',                    // Alternative Railway path
   path.join(process.cwd(), 'frontend'), // Process working directory
   path.resolve('./frontend') // Relative to current directory
 ];
