@@ -5,18 +5,27 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import bodyParser from 'body-parser';
 import { Sequelize, DataTypes } from 'sequelize';
 import rateLimit from 'express-rate-limit';
+import fs from 'fs';
 
-dotenv.config();
+// Load environment variables explicitly depending on NODE_ENV
+const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local';
+const envPath = path.resolve(process.cwd(), envFile);
+
+if (fs.existsSync(envPath)) {
+  dotenv.config({ path: envPath });
+  console.log(`✅ Loaded environment variables from ${envFile}`);
+} else {
+  dotenv.config(); // fallback to default .env if no specific env file
+  console.warn(`⚠️ Environment file ${envFile} not found, loaded default .env (if exists)`);
+}
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Determine if we are running locally or in production
 const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT;
 const isLocal = !isProduction;
 
@@ -26,7 +35,7 @@ if (process.env.MYSQL_URL) {
   try {
     const url = new URL(process.env.MYSQL_URL);
 
-    // Railway proxy fix: replace ballast.internal host with proxy host when running locally
+    // Railway proxy fix for local dev
     let host = url.hostname;
     let port = Number(url.port || 3306);
 
@@ -37,7 +46,7 @@ if (process.env.MYSQL_URL) {
     }
 
     sequelize = new Sequelize(
-      url.pathname.slice(1),
+      url.pathname.slice(1), // database name
       url.username,
       url.password,
       {
@@ -51,17 +60,44 @@ if (process.env.MYSQL_URL) {
             rejectUnauthorized: false,
           },
         },
+
+        // THIS IS IMPORTANT: Add pool & retry config to avoid connection loss
+        pool: {
+          max: 10,
+          min: 0,
+          acquire: 30000,
+          idle: 10000,
+          evict: 15000,
+        },
+        retry: {
+          max: 5, // Retry 5 times before failing
+        },
+        // Enable keepAlive to avoid server closing connection
+        dialectOptions: {
+          ... (url.protocol === 'mysql:' ? {} : { ssl: { require: true, rejectUnauthorized: false } }),
+          connectTimeout: 10000,
+        },
+        define: {
+          // Add this to avoid timezone issues
+          timestamps: true,
+          underscored: true,
+        }
       }
     );
 
+    // Listen to connection error event
+    sequelize.connectionManager.on('error', err => {
+      console.error('Sequelize connection error:', err);
+    });
+
     console.log(`✅ Using MYSQL_URL (${isLocal ? 'LOCAL' : 'PRODUCTION'})`);
     console.log(`🔗 Connecting to: ${host}:${port}`);
-
   } catch (err) {
     console.error('❌ Failed to parse MYSQL_URL:', err);
     process.exit(1);
   }
 } else {
+  // Fallback if MYSQL_URL not provided
   sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
@@ -77,6 +113,18 @@ if (process.env.MYSQL_URL) {
           rejectUnauthorized: false,
         },
       },
+      pool: {
+        max: 10,
+        min: 0,
+        acquire: 30000,
+        idle: 10000,
+        evict: 15000,
+      },
+      retry: { max: 5 },
+      define: {
+        timestamps: true,
+        underscored: true,
+      }
     }
   );
   console.log('✅ Using DB_NAME/USER/HOST env config');
@@ -84,26 +132,19 @@ if (process.env.MYSQL_URL) {
 
 // Define Order model
 const Order = sequelize.define('Order', {
-  item: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    defaultValue: 1,
-  },
+  item: { type: DataTypes.STRING, allowNull: false },
+  quantity: { type: DataTypes.INTEGER, defaultValue: 1 },
 });
 
-// Trust proxy (important for Railway and rate limit)
+// Trust proxy for Railway & rate limit
 app.set('trust proxy', 1);
 
 app.use(helmet());
 app.use(cors());
 app.use(morgan('dev'));
 
-// Rate limiter with trustProxy: true to avoid ERR_ERL_PERMISSIVE_TRUST_PROXY
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
@@ -111,26 +152,23 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// Body parsers
-app.use(bodyParser.raw({ type: 'application/json' })); // for Stripe webhook
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Stripe webhook placeholder
+import bodyParser from 'body-parser';
+app.use(bodyParser.raw({ type: 'application/json' }));
+
 app.post('/webhook', (req, res) => {
-  // TODO: implement Stripe webhook logic here
+  // Stripe webhook logic here
   res.status(200).send('Webhook received');
 });
 
-// Serve static frontend files (adjust path as needed)
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// SPA fallback for non-API routes
 app.get(/^(?!\/api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
 });
 
-// API routes
 app.get('/api', (req, res) => {
   res.json({ message: 'Kongle API is running!' });
 });
@@ -159,15 +197,14 @@ app.post('/api/kongles/subscribe', (req, res) => {
 });
 
 app.post('/api/kongles/checkout', (req, res) => {
-  res.json({ url: 'https://stripe.com/checkout' }); // Placeholder
+  res.json({ url: 'https://stripe.com/checkout' });
 });
 
-// 404 fallback for unknown API routes
 app.use('/api/*', (req, res) => {
   res.status(404).json({ error: 'API route not found' });
 });
 
-// Start server & connect to DB
+// Start server & DB connection
 (async () => {
   try {
     await sequelize.authenticate();
