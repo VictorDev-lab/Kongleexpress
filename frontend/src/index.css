@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Grunnleggende styling for body-elementet */
+body {
+  min-height: 100vh; /* Sikrer at body fyller hele viewport-høyden */
+  font-family: 'Poppins', sans-serif; /* Bruker Poppins font */
+  background-color: #f4f9f9; /* Lys bakgrunnsfarge */
+  color: #2c3e50; /* Standard tekstfarge */
+  line-height: 1.6; /* Linjehøyde for bedre lesbarhet */
+  text-align: center; /* Sentrerer tekst globalt */
+  position: relative; /* Nødvendig for pseudo-element positioning */
+}
+
+/* Legger til et subtilt bakgrunnsbilde med lav opasitet */
+body::before {
+  content: ''; /* Nødvendig for pseudo-element */
+  position: fixed; /* Fikser bakgrunnen i viewport */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  /* Tilfeldig bilde av kongle fra Unsplash, dekker hele bakgrunnen */
+  background: url('https://source.unsplash.com/random/1920x1080?pinecone') no-repeat center center/cover;
+  opacity: 0.08; /* Lav opasitet for å være subtil */
+  z-index: -1; /* Sikrer at bakgrunnen er bak innholdet */
+}
